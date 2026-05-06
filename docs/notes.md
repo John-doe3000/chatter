@@ -1,0 +1,20 @@
+The most effective way to combine a **Django backend** and an **Android Studio** app in a single repository is to use a **monorepo structure**. This involves keeping each project in its own high-level directory within a single root folder, which simplifies dependency management, facilitates atomic commits, and unifies your CI/CD pipeline. [[1](https://www.reddit.com/r/django/comments/1alyark/django_monorepo_structure_review_for_several/), [2](https://krzysztofzuraw.com/blog/2017/monorepo-structure-for-django-and-react-applications/), [3](https://www.vintasoftware.com/blog/django-react-monorepo), [4](https://www.vintasoftware.com/blog/django-react-monorepo)]
+
+Recommended Monorepo Structure
+
+Organize your root directory so that the backend and mobile code are clearly separated into their own subdirectories:
+
+- **`/backend`**: Contains your Django project files (e.g., `manage.py`, `settings.py`) and all Django apps.
+- **`/mobile`**: Contains the complete Android Studio project, including the `app` module and `build.gradle` files.
+- **`/.gitignore`**: A single file at the root that includes rules for both Python/Django (e.g., `__pycache__`, `.env`, `venv/`) and Android (e.g., `.gradle/`, `build/`, `*.iml`).
+- **`README.md`**: A central file explaining how to set up both environments. [[1](https://www.reddit.com/r/django/comments/1nv3cdy/django_in_project_root_or_subdir_monorepo/), [2](https://easyaspython.com/how-to-consolidate-multiple-django-projects-b7c9bb940a59), [3](https://medium.com/swlh/managing-multiple-apps-within-a-single-android-studio-project-659eb33f5f0e), [4](https://www.reddit.com/r/django/comments/1img2v1/best_practices_for_maintaining_a_django/), [5](https://medium.com/@iamkabiru/dockerizing-a-django-application-with-postgresql-using-multi-stage-builds-f451f8de121a)]
+
+Implementation Best Practices
+
+- **API-First Approach**: Use the [Django REST Framework (DRF)](https://www.django-rest-framework.org/) to serve your backend as an API. This allows your Android app to communicate with the server via JSON.
+- **Unified Environment**: Use a tool like **Docker Compose** at the root of the repo to orchestrate both the Django backend and any required databases. This ensures a consistent development environment for anyone working on the repo.
+- **Mobile Networking**: Use [Retrofit](https://square.github.io/retrofit/) in your Android app to handle HTTP calls and map JSON responses directly to Kotlin/Java objects.
+- **Independent Build Systems**: Keep the build systems separate. Your Android app will continue to use **Gradle** within its `/mobile` folder, while your Django app uses **pip** or **Poetry** within `/backend`.
+- **Branching Strategy**: Use a clear branching strategy (e.g., **GitFlow** or **Trunk-based development**) to manage changes. Require pull request reviews and automated tests for both the backend and mobile code before merging to the main branch. [[1](https://stackoverflow.com/questions/77749634/how-to-handle-backend-and-frontend-code-in-a-single-repository-when-developing-s), [2](https://www.reddit.com/r/django/comments/fk2y5b/does_anyone_have_experience_with_making_mobile/), [3](https://www.quora.com/What-is-the-best-way-to-connect-a-mobile-app-to-a-Django-based-backend-server), [4](https://stackoverflow.com/questions/65895620/how-to-connect-android-application-with-django), [5](https://www.quora.com/What-is-the-best-way-to-convert-a-Django-project-into-an-Android-App-without-using-any-third-party-libraries), [6](https://github.com/Shippable/support/issues/1420), [7](https://www.reddit.com/r/django/comments/1guaaf7/what_is_the_correct_way_to_structure_django_apps/), [8](https://krzysztofzuraw.com/blog/2017/monorepo-structure-for-django-and-react-applications/), [9](https://www.vintasoftware.com/blog/django-react-monorepo), [10](https://www.reddit.com/r/django/comments/1img2v1/best_practices_for_maintaining_a_django/)]
+
+Are you planning to use **Docker** for local development, or would you prefer a setup guide for **native environment** configurations?
