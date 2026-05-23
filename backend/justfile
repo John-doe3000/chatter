@@ -1,0 +1,59 @@
+# Chatter Backend Tasks
+
+# Install dependencies
+install:
+    pip install -r requirements.txt
+
+# Run all tests
+test:
+    pytest -v
+
+# Run tests with coverage
+test-coverage:
+    pytest --cov=accounts --cov=groups --cov-report=html
+
+# Run specific test file
+test-file FILE:
+    pytest {{FILE}} -v
+
+# Create migrations
+makemigrations APP="":
+    @if [ -z "{{APP}}" ]; then \
+        python manage.py makemigrations; \
+    else \
+        python manage.py makemigrations {{APP}}; \
+    fi
+
+# Apply migrations
+migrate:
+    python manage.py migrate
+
+# Start development server
+runserver HOST="0.0.0.0" PORT="8000":
+    python manage.py runserver {{HOST}}:{{PORT}}
+
+# Create superuser
+createsuperuser:
+    python manage.py createsuperuser
+
+# Shell
+shell:
+    python manage.py shell
+
+# Format code with black (if installed)
+format:
+    black accounts groups
+
+# Lint with flake8 (if installed)
+lint:
+    flake8 accounts groups
+
+# Clean up pycache and db
+clean:
+    find . -type d -name __pycache__ -exec rm -rf {} +
+    find . -type f -name "*.pyc" -delete
+    rm -f db.sqlite3
+
+# Help
+help:
+    @just --list
