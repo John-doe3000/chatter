@@ -1,0 +1,8 @@
+Django==5.0.1
+djangorestframework==3.14.0
+djangorestframework-authtoken==3.13.1
+gunicorn==21.2.0
+daphne==4.0.0
+pytest==7.4.3
+pytest-django==4.7.0
+factory-boy==3.3.0

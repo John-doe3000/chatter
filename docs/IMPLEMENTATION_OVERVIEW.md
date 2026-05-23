@@ -108,7 +108,7 @@ Group (1) ───< Ban >── User
 
 | Method | Path                                       | Purpose                          |
 | ------ | ------------------------------------------ | -------------------------------- |
-| POST   | `/api/auth/register/`                      | Create account                   |
+| POST   | `/api/auth/register/` | Create account                   |
 | POST   | `/api/auth/login/`                         | Obtain token                     |
 | POST   | `/api/auth/logout/`                        | Revoke token                     |
 | GET    | `/api/users/me/`                           | Current user                     |
