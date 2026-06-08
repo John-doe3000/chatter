@@ -150,19 +150,19 @@ class MessageAPITestCase(TestCase):
 
         # Create messages with timestamps
         msg1 = Message.objects.create(group=self.group, sender=self.user1, body='Message 1')
-        msg1.created_at = timezone.datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc)
+        msg1.created_at = timezone.datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.UTC)
         msg1.save()
 
         msg2 = Message.objects.create(group=self.group, sender=self.user2, body='Message 2')
-        msg2.created_at = timezone.datetime(2024, 1, 1, 11, 0, 0, tzinfo=timezone.utc)
+        msg2.created_at = timezone.datetime(2024, 1, 1, 11, 0, 0, tzinfo=timezone.UTC)
         msg2.save()
 
         msg3 = Message.objects.create(group=self.group, sender=self.user1, body='Message 3')
-        msg3.created_at = timezone.datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        msg3.created_at = timezone.datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.UTC)
         msg3.save()
 
         # Poll since msg1's creation time
-        since = timezone.datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc).isoformat()
+        since = timezone.datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.UTC).isoformat()
         response = self.client.get(
             f'/api/groups/{self.group.id}/messages/',
             {'since': since}
