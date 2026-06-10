@@ -1,0 +1,5 @@
+{
+  "apiProvider": "openrouter",
+  "openrouterModelId": "openrouter/owl-alpha",
+  "openrouterMaxTokens": 8192
+}
