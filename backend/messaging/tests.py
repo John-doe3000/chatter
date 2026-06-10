@@ -243,3 +243,321 @@ class MessageAPITestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results'][0]['attachments']), 1)
+
+    # --- Attachment validation tests ---
+
+    def _create_test_file(self, content, filename, content_type):
+        """Helper to create a test file with specific content type."""
+        file_obj = BytesIO(content)
+        file_obj.name = filename
+        file_obj.content_type = content_type
+        return file_obj
+
+    def test_image_attachment_valid_jpeg(self):
+        """Test that valid JPEG image is accepted."""
+        self.client.force_authenticate(user=self.user1)
+
+        image_data = self._create_test_file(b'fake jpeg data', 'test.jpg', 'image/jpeg')
+
+        data = {
+            'body': 'JPEG image',
+            'attachment': image_data,
+            'kind': 'image'
+        }
+        response = self.client.post(
+            f'/api/groups/{self.group.id}/messages/',
+            data,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['attachments'][0]['kind'], 'image')
+
+    def test_image_attachment_valid_png(self):
+        """Test that valid PNG image is accepted."""
+        self.client.force_authenticate(user=self.user1)
+
+        image_data = self._create_test_file(b'fake png data', 'test.png', 'image/png')
+
+        data = {
+            'body': 'PNG image',
+            'attachment': image_data,
+            'kind': 'image'
+        }
+        response = self.client.post(
+            f'/api/groups/{self.group.id}/messages/',
+            data,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['attachments'][0]['kind'], 'image')
+
+    def test_image_attachment_invalid_mime_type(self):
+        """Test that invalid MIME type for image is rejected."""
+        self.client.force_authenticate(user=self.user1)
+
+        # Try to upload a GIF as image
+        image_data = self._create_test_file(b'fake gif data', 'test.gif', 'image/gif')
+
+        data = {
+            'body': 'GIF image',
+            'attachment': image_data,
+            'kind': 'image'
+        }
+        response = self.client.post(
+            f'/api/groups/{self.group.id}/messages/',
+            data,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Invalid MIME type', str(response.data))
+
+    def test_image_attachment_oversize(self):
+        """Test that oversized image is rejected (max 10 MB)."""
+        self.client.force_authenticate(user=self.user1)
+
+        # Create a file larger than 10 MB
+        large_content = b'x' * (11 * 1024 * 1024)  # 11 MB
+        image_data = self._create_test_file(large_content, 'large.jpg', 'image/jpeg')
+
+        data = {
+            'body': 'Large image',
+            'attachment': image_data,
+            'kind': 'image'
+        }
+        response = self.client.post(
+            f'/api/groups/{self.group.id}/messages/',
+            data,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('exceeds maximum allowed', str(response.data))
+
+    def test_video_attachment_valid_mp4(self):
+        """Test that valid MP4 video is accepted."""
+        self.client.force_authenticate(user=self.user1)
+
+        video_data = self._create_test_file(b'fake mp4 data', 'test.mp4', 'video/mp4')
+
+        data = {
+            'body': 'MP4 video',
+            'attachment': video_data,
+            'kind': 'video'
+        }
+        response = self.client.post(
+            f'/api/groups/{self.group.id}/messages/',
+            data,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['attachments'][0]['kind'], 'video')
+
+    def test_video_attachment_invalid_mime_type(self):
+        """Test that invalid MIME type for video is rejected."""
+        self.client.force_authenticate(user=self.user1)
+
+        # Try to upload a WebM as video
+        video_data = self._create_test_file(b'fake webm data', 'test.webm', 'video/webm')
+
+        data = {
+            'body': 'WebM video',
+            'attachment': video_data,
+            'kind': 'video'
+        }
+        response = self.client.post(
+            f'/api/groups/{self.group.id}/messages/',
+            data,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Invalid MIME type', str(response.data))
+
+    def test_video_attachment_oversize(self):
+        """Test that oversized video is rejected (max 50 MB)."""
+        self.client.force_authenticate(user=self.user1)
+
+        # Create a file larger than 50 MB
+        large_content = b'x' * (51 * 1024 * 1024)  # 51 MB
+        video_data = self._create_test_file(large_content, 'large.mp4', 'video/mp4')
+
+        data = {
+            'body': 'Large video',
+            'attachment': video_data,
+            'kind': 'video'
+        }
+        response = self.client.post(
+            f'/api/groups/{self.group.id}/messages/',
+            data,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('exceeds maximum allowed', str(response.data))
+
+    def test_voice_attachment_valid_aac(self):
+        """Test that valid AAC audio is accepted."""
+        self.client.force_authenticate(user=self.user1)
+
+        audio_data = self._create_test_file(b'fake aac data', 'test.aac', 'audio/aac')
+
+        data = {
+            'body': 'AAC voice',
+            'attachment': audio_data,
+            'kind': 'voice'
+        }
+        response = self.client.post(
+            f'/api/groups/{self.group.id}/messages/',
+            data,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['attachments'][0]['kind'], 'voice')
+
+    def test_voice_attachment_valid_mp4(self):
+        """Test that valid MP4 audio is accepted."""
+        self.client.force_authenticate(user=self.user1)
+
+        audio_data = self._create_test_file(b'fake mp4 audio data', 'test.m4a', 'audio/mp4')
+
+        data = {
+            'body': 'MP4 voice',
+            'attachment': audio_data,
+            'kind': 'voice'
+        }
+        response = self.client.post(
+            f'/api/groups/{self.group.id}/messages/',
+            data,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['attachments'][0]['kind'], 'voice')
+
+    def test_voice_attachment_valid_mpeg(self):
+        """Test that valid MPEG audio is accepted."""
+        self.client.force_authenticate(user=self.user1)
+
+        audio_data = self._create_test_file(b'fake mpeg data', 'test.mp3', 'audio/mpeg')
+
+        data = {
+            'body': 'MPEG voice',
+            'attachment': audio_data,
+            'kind': 'voice'
+        }
+        response = self.client.post(
+            f'/api/groups/{self.group.id}/messages/',
+            data,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['attachments'][0]['kind'], 'voice')
+
+    def test_voice_attachment_invalid_mime_type(self):
+        """Test that invalid MIME type for voice is rejected."""
+        self.client.force_authenticate(user=self.user1)
+
+        # Try to upload a WAV as voice
+        audio_data = self._create_test_file(b'fake wav data', 'test.wav', 'audio/wav')
+
+        data = {
+            'body': 'WAV voice',
+            'attachment': audio_data,
+            'kind': 'voice'
+        }
+        response = self.client.post(
+            f'/api/groups/{self.group.id}/messages/',
+            data,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Invalid MIME type', str(response.data))
+
+    def test_voice_attachment_oversize(self):
+        """Test that oversized voice is rejected (max 10 MB)."""
+        self.client.force_authenticate(user=self.user1)
+
+        # Create a file larger than 10 MB
+        large_content = b'x' * (11 * 1024 * 1024)  # 11 MB
+        audio_data = self._create_test_file(large_content, 'large.mp3', 'audio/mpeg')
+
+        data = {
+            'body': 'Large voice',
+            'attachment': audio_data,
+            'kind': 'voice'
+        }
+        response = self.client.post(
+            f'/api/groups/{self.group.id}/messages/',
+            data,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('exceeds maximum allowed', str(response.data))
+
+    # --- Media file access tests ---
+
+    def test_attachment_media_access_as_member(self):
+        """Test that group member can access attachment media."""
+        self.client.force_authenticate(user=self.user1)
+
+        # Create message with attachment
+        message = Message.objects.create(group=self.group, sender=self.user1, body='With attachment')
+        attachment = Attachment.objects.create(
+            message=message,
+            file='test.jpg',
+            kind=Attachment.Kind.IMAGE
+        )
+
+        # Access the attachment media
+        response = self.client.get(f'/api/attachments/{attachment.id}/')
+
+        # Should succeed (or 404 if file doesn't exist physically, but not 403)
+        self.assertNotEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_media_access_as_non_member(self):
+        """Test that non-member cannot access attachment media."""
+        self.client.force_authenticate(user=self.user3)
+
+        # Create message with attachment
+        message = Message.objects.create(group=self.group, sender=self.user1, body='With attachment')
+        attachment = Attachment.objects.create(
+            message=message,
+            file='test.jpg',
+            kind=Attachment.Kind.IMAGE
+        )
+
+        # Access the attachment media
+        response = self.client.get(f'/api/attachments/{attachment.id}/')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_media_access_unauthenticated(self):
+        """Test that unauthenticated user cannot access attachment media."""
+        # Create message with attachment
+        message = Message.objects.create(group=self.group, sender=self.user1, body='With attachment')
+        attachment = Attachment.objects.create(
+            message=message,
+            file='test.jpg',
+            kind=Attachment.Kind.IMAGE
+        )
+
+        # Access the attachment media without authentication
+        response = self.client.get(f'/api/attachments/{attachment.id}/')
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_attachment_media_not_found(self):
+        """Test that accessing non-existent attachment returns 404."""
+        self.client.force_authenticate(user=self.user1)
+
+        response = self.client.get('/api/attachments/99999/')
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

@@ -4,6 +4,25 @@ info:
   version: 1.0.0
   description: REST API for the Chatter messaging platform (accounts, groups, messaging).
 paths:
+  /api/attachments/{attachment_id}/:
+    get:
+      operationId: attachments_retrieve
+      description: |-
+        Serve attachment media files only to authenticated users who are members
+        of the message's group.
+      parameters:
+      - in: path
+        name: attachment_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - attachments
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/auth/login/:
     post:
       operationId: auth_login_create

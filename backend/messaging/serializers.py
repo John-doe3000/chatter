@@ -2,6 +2,23 @@ from rest_framework import serializers
 from .models import Message, Attachment
 
 
+# MIME type and size limits per attachment kind
+ATTACHMENT_VALIDATION = {
+    Attachment.Kind.IMAGE: {
+        'mime_types': ['image/jpeg', 'image/png'],
+        'max_size': 10 * 1024 * 1024,  # 10 MB
+    },
+    Attachment.Kind.VIDEO: {
+        'mime_types': ['video/mp4'],
+        'max_size': 50 * 1024 * 1024,  # 50 MB
+    },
+    Attachment.Kind.VOICE: {
+        'mime_types': ['audio/aac', 'audio/mp4', 'audio/mpeg'],
+        'max_size': 10 * 1024 * 1024,  # 10 MB
+    },
+}
+
+
 class AttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attachment
@@ -37,7 +54,33 @@ class MessageCreateSerializer(serializers.ModelSerializer):
         if attachment and not data.get('kind'):
             raise serializers.ValidationError('kind is required when attachment is provided.')
 
+        # Validate attachment if provided
+        if attachment:
+            kind = data.get('kind')
+            self._validate_attachment(attachment, kind)
+
         return data
+
+    def _validate_attachment(self, file, kind):
+        """Validate MIME type and size based on attachment kind."""
+        validation_rules = ATTACHMENT_VALIDATION.get(kind)
+        if not validation_rules:
+            raise serializers.ValidationError(f'Invalid attachment kind: {kind}')
+
+        # Check MIME type
+        content_type = getattr(file, 'content_type', None)
+        if content_type not in validation_rules['mime_types']:
+            allowed = ', '.join(validation_rules['mime_types'])
+            raise serializers.ValidationError(
+                f'Invalid MIME type for {kind}: {content_type}. Allowed: {allowed}'
+            )
+
+        # Check file size
+        if file.size > validation_rules['max_size']:
+            max_mb = validation_rules['max_size'] / (1024 * 1024)
+            raise serializers.ValidationError(
+                f'File size exceeds maximum allowed for {kind}: {max_mb} MB'
+            )
 
     def create(self, validated_data):
         attachment_file = validated_data.pop('attachment', None)
