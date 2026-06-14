@@ -14,6 +14,11 @@ install:
 test:
     cd backend && pytest -v
 
+# Run all tests (local + docker)
+test-all:
+    cd backend && pytest -v
+    docker compose exec gunicorn pytest -v
+
 # Run tests with coverage
 test-coverage:
     cd backend && pytest --cov=accounts --cov=groups --cov-report=html
@@ -37,6 +42,10 @@ migrate:
 # Start development server
 runserver HOST="0.0.0.0" PORT="8000":
     cd backend && python manage.py runserver {{HOST}}:{{PORT}}
+
+# Start development environment (Docker with hot-reload)
+dev:
+    docker compose up
 
 # Create superuser
 createsuperuser:
@@ -64,67 +73,67 @@ clean:
 
 # Build Docker images
 docker-build:
-    docker-compose build
+    docker compose build
 
 # Build Docker images without cache
 docker-build-nocache:
-    docker-compose build --no-cache
+    docker compose build --no-cache
 
 # Start all services in background
 docker-up:
-    docker-compose up -d
+    docker compose up -d
 
 # Start all services in foreground (for development)
 docker-up-fg:
-    docker-compose up
+    docker compose up
 
 # Stop and remove containers
 docker-down:
-    docker-compose down
+    docker compose down
 
 # Stop and remove containers with volumes
 docker-down-volumes:
-    docker-compose down -v
+    docker compose down -v
 
 # View logs for all services
 docker-logs:
-    docker-compose logs -f
+    docker compose logs -f
 
 # View logs for specific service
 docker-logs-service SERVICE:
-    docker-compose logs -f {{SERVICE}}
+    docker compose logs -f {{SERVICE}}
 
 # Restart services
 docker-restart:
-    docker-compose restart
+    docker compose restart
 
 # Run Django management command in gunicorn container
 docker-manage CMD:
-    docker-compose exec gunicorn python manage.py {{CMD}}
+    docker compose exec gunicorn python manage.py {{CMD}}
 
 # Run Django migrations
 docker-migrate:
-    docker-compose exec gunicorn python manage.py migrate
+    docker compose exec gunicorn python manage.py migrate
 
 # Create superuser
 docker-createsuperuser:
-    docker-compose exec gunicorn python manage.py createsuperuser
+    docker compose exec gunicorn python manage.py createsuperuser
 
 # Collect static files
 docker-collectstatic:
-    docker-compose exec gunicorn python manage.py collectstatic --noinput
+    docker compose exec gunicorn python manage.py collectstatic --noinput
 
 # Open shell in gunicorn container
 docker-shell:
-    docker-compose exec gunicorn bash
+    docker compose exec gunicorn bash
 
 # Run tests in container
 docker-test:
-    docker-compose exec gunicorn pytest -v
+    docker compose exec gunicorn pytest -v
 
 # Health check status
 docker-health:
-    docker-compose ps
+    docker compose ps
 
 # Help
 help:
