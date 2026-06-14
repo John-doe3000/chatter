@@ -60,6 +60,72 @@ clean:
     find backend -type f -name "*.pyc" -delete
     rm -f backend/db.sqlite3
 
+# Docker Compose Tasks
+
+# Build Docker images
+docker-build:
+    docker-compose build
+
+# Build Docker images without cache
+docker-build-nocache:
+    docker-compose build --no-cache
+
+# Start all services in background
+docker-up:
+    docker-compose up -d
+
+# Start all services in foreground (for development)
+docker-up-fg:
+    docker-compose up
+
+# Stop and remove containers
+docker-down:
+    docker-compose down
+
+# Stop and remove containers with volumes
+docker-down-volumes:
+    docker-compose down -v
+
+# View logs for all services
+docker-logs:
+    docker-compose logs -f
+
+# View logs for specific service
+docker-logs-service SERVICE:
+    docker-compose logs -f {{SERVICE}}
+
+# Restart services
+docker-restart:
+    docker-compose restart
+
+# Run Django management command in gunicorn container
+docker-manage CMD:
+    docker-compose exec gunicorn python manage.py {{CMD}}
+
+# Run Django migrations
+docker-migrate:
+    docker-compose exec gunicorn python manage.py migrate
+
+# Create superuser
+docker-createsuperuser:
+    docker-compose exec gunicorn python manage.py createsuperuser
+
+# Collect static files
+docker-collectstatic:
+    docker-compose exec gunicorn python manage.py collectstatic --noinput
+
+# Open shell in gunicorn container
+docker-shell:
+    docker-compose exec gunicorn bash
+
+# Run tests in container
+docker-test:
+    docker-compose exec gunicorn pytest -v
+
+# Health check status
+docker-health:
+    docker-compose ps
+
 # Help
 help:
     @just --list

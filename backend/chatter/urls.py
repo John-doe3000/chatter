@@ -10,12 +10,16 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
+from chatter.health import HealthCheckView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
     path('api/', include('groups.urls')),
     path('api/', include('messaging.urls')),
+
+    # Health check endpoint for Docker
+    path('health/', HealthCheckView.as_view(), name='health'),
 
     # OpenAPI / API documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

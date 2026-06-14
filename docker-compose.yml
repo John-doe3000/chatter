@@ -1,0 +1,77 @@
+services:
+  # Gunicorn service for WSGI (HTTP requests)
+  gunicorn:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: >
+      gunicorn chatter.wsgi:application
+      --bind 0.0.0.0:8000
+      --workers 3
+      --timeout 60
+      --access-logfile -
+      --error-logfile -
+    volumes:
+      - sqlite_data:/app
+      - media_data:/app/media
+    environment:
+      - DJANGO_SETTINGS_MODULE=chatter.settings
+      - DEBUG=False
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # Daphne service for ASGI (WebSocket requests)
+  daphne:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: >
+      daphne chatter.asgi:application
+      --bind 0.0.0.0
+      --port 8001
+      --access-log -
+      --proxy-headers
+    volumes:
+      - sqlite_data:/app
+      - media_data:/app/media
+    environment:
+      - DJANGO_SETTINGS_MODULE=chatter.settings
+      - DEBUG=False
+    expose:
+      - "8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - media_data:/app/media:ro
+      - static_data:/app/staticfiles:ro
+    depends_on:
+      gunicorn:
+        condition: service_healthy
+      daphne:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
+  media_data:
+  static_data:
