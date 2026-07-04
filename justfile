@@ -1,73 +1,77 @@
 set shell := ["bash", "-c"]
 
-# Example task
-hello:
-    echo "No"
+venv-create:
+	@echo "Creating Python virtual environment..."
+	cd backend && python -m venv .venv
+	@echo "Virtual environment created. Activate it with:"
+	@echo "  Windows: backend\\.venv\\Scripts\\activate"
+	@echo "  Unix/Mac: source backend/.venv/bin/activate"
 
-# Chatter Backend Tasks
+venv-activate:
+	@echo "Opening a shell with the backend virtual environment activated..."
+	cd backend && if [[ ! -f .venv/bin/activate ]]; then echo "Virtual environment not found. Run: just venv-create"; exit 1; fi; source .venv/bin/activate && exec ${SHELL:-bash} -i
 
-# Install dependencies
+setup: venv-create
+	@echo "Setting up development environment..."
+	@echo "Then run: just install"
+
 install:
-    cd backend && pip install -r requirements.txt
+	@echo "Installing dependencies..."
+	cd backend && .venv/bin/python -m pip install -r requirements.txt
 
-# Run all tests
-test:
-    cd backend && pytest -v
+# Project maintenance
+update-reqs:
+	@echo "Updating requirements.txt..."
+	cd backend && .venv/bin/python -m pip freeze > requirements.txt
 
-# Run all tests (local + docker)
-test-all:
-    cd backend && pytest -v
-    docker compose exec gunicorn pytest -v
+# Backend Django development
+backend-dev:
+	@echo "Starting Django development server..."
+	cd backend && .venv/bin/python manage.py runserver
 
-# Run tests with coverage
-test-coverage:
-    cd backend && pytest --cov=accounts --cov=groups --cov-report=html
+backend-test:
+	@echo "Running tests with pytest..."
+	cd backend && .venv/bin/python -m pytest
 
-# Run specific test file
-test-file FILE:
-    cd backend && pytest {{FILE}} -v
+backend-lint:
+	@echo "Running backend lint checks..."
+	cd backend && .venv/bin/python -m ruff check .
 
-# Create migrations
-makemigrations APP="":
-    if [ -z "{{APP}}" ]; then \
-        cd backend && python manage.py makemigrations; \
-    else \
-        cd backend && python manage.py makemigrations {{APP}}; \
-    fi
+backend-lint-fix:
+	@echo "Running backend lint checks..."
+	cd backend && .venv/bin/python -m ruff check . --fix
 
-# Apply migrations
-migrate:
-    cd backend && python manage.py migrate
+backend-migrations:
+	@echo "Applying database migrations..."
+	cd backend && .venv/bin/python manage.py migrate
 
-# Start development server
-runserver HOST="0.0.0.0" PORT="8000":
-    cd backend && python manage.py runserver {{HOST}}:{{PORT}}
+backend-superuser:
+	@echo "Creating superuser..."
+	cd backend && .venv/bin/python manage.py createsuperuser
 
-# Start development environment (Docker with hot-reload)
-dev:
-    docker compose up
+backend-shell:
+	@echo "Opening Django shell..."
+	cd backend && .venv/bin/python manage.py shell
 
-# Create superuser
-createsuperuser:
-    cd backend && python manage.py createsuperuser
+# Frontend (if applicable)
+frontend-dev:
+	@echo "Starting frontend development server..."
+	npm start
 
-# Shell
-shell:
-    cd backend && python manage.py shell
+frontend-build:
+	@echo "Building frontend for production..."
+	npm run build
 
-# Format code with black (if installed)
-format:
-    cd backend && black accounts groups
-
-# Lint with flake8 (if installed)
-lint:
-    cd backend && flake8 accounts groups
-
-# Clean up pycache and db
 clean:
-    find backend -type d -name __pycache__ -exec rm -rf {} +
-    find backend -type f -name "*.pyc" -delete
-    rm -f backend/db.sqlite3
+	@echo "Cleaning up..."
+	cd backend && find . -type f -name "*.pyc" -delete
+	cd backend && find . -type d -name "__pycache__" -exec rm -rf {} +
+	cd backend && find . -type f -name "*.pyo" -delete
+	cd backend && find . -type f -name "*~" -delete
+	cd backend && find . -type f -name ".coverage" -delete
+	cd backend && find . -type d -name "*.egg-info" -exec rm -rf {} +
+	cd backend && find . -type d -name ".pytest_cache" -exec rm -rf {} +
+	cd backend && find . -type d -name ".coverage" -exec rm -rf {} +
 
 # Docker Compose Tasks
 
@@ -134,7 +138,3 @@ docker-test:
 # Health check status
 docker-health:
     docker compose ps
-
-# Help
-help:
-    @just --list

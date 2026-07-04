@@ -1,5 +1,5 @@
 from rest_framework.permissions import BasePermission
-from .models import Membership, Ban
+from .models import Membership
 
 
 class IsGroupMember(BasePermission):

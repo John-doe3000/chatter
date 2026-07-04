@@ -10,7 +10,7 @@ from .serializers import (
     MembershipSerializer, InvitationSerializer, InviteUserSerializer,
     PromoteUserSerializer
 )
-from .permissions import IsGroupMember, IsGroupAdmin, IsGroupHeadAdmin
+from .permissions import IsGroupAdmin, IsGroupHeadAdmin
 
 User = get_user_model()
 

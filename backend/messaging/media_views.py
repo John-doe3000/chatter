@@ -3,13 +3,12 @@ Views for serving media files with authentication and authorization.
 """
 import os
 from django.http import FileResponse, Http404
-from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from groups.models import Membership
-from .models import Attachment, Message
+from .models import Attachment
 
 
 class AttachmentMediaView(APIView):
