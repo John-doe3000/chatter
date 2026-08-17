@@ -1,52 +1,67 @@
-# Instructions for Gemini
+# Android frontend setup notes
 
-✅ Status of the setup
+## Current repo status
 
-I checked the project and the Android-side configuration is already aligned with the emulator pattern:
+This repo is already aligned with the correct Android emulator pattern for local Windows development.
 
-- `build.gradle.kts` reads BASE_URL from local.properties and defaults to `http://10.0.2.2:8000/`
-- `AndroidManifest.xml` already includes `android:usesCleartextTraffic="true"`
-- local.properties already contains `BASE_URL=http://10.0.2.2:8000/`
+Relevant details in the project:
 
-So for the Android Emulator on Windows 11, the main requirement is already in place.
+- `mobile/app/build.gradle.kts` reads `BASE_URL` from `mobile/local.properties` and defaults to `http://10.0.2.2:8000/`
+- `mobile/app/src/main/AndroidManifest.xml` includes `android:usesCleartextTraffic="true"`
+- `mobile/local.properties` already contains `BASE_URL=http://10.0.2.2:8000/`
+- the app manifest also declares `INTERNET` permission
 
-I also updated `docker-compose.yml` so the backend is published on host ports:
+This means the repo already has the expected Android-side configuration for the emulator workflow.
 
-- gunicorn: `8000:8000`
-- daphne: `8001:8001`
+## Backend requirements for local Android development
 
-This is important because the emulator must reach the host machine, not the device itself.
+The backend should be run through Docker Desktop on Windows, and the Android emulator must reach the host machine rather than itself.
 
-Will the plan work?
+Important rules:
 
-Yes — for an Android Emulator on Windows, this is the correct pattern:
+- Do not use `127.0.0.1` or `localhost` in Android code
+- Use `10.0.2.2` for the Android emulator
+- Expose the Django backend on host port `8000`
+- Keep the service bound to `0.0.0.0` inside Docker
+- Use `android:usesCleartextTraffic="true"` for local HTTP development
 
-- Use 10.0.2.2 in Android code, not localhost
-- Keep the backend bound to 0.0.0.0 inside Docker
-- Expose the Django service on a host port like 8000
-- Keep usesCleartextTraffic="true" for dev HTTP traffic
+The repo already follows that pattern:
 
-This should work for:
+- `docker-compose.yml` exposes gunicorn on `8000:8000`
+- `docker-compose.yml` exposes daphne on `8001:8001`
+- the Django app listens on `0.0.0.0` inside Docker
+- nginx is still mapped to `8080:80`, which is a separate host/browser reverse proxy and is not the Android emulator endpoint
 
-- Android Emulator on Windows 11
-- Docker Desktop running the backend
-- Local development against the app in Android Studio
+## Why this is necessary
 
-Important note
+The Android emulator runs inside a virtual machine, so it has a special host alias:
 
-The project's nginx reverse proxy is intentionally using 8080:80 because Docker rootless does not allow binding to privileged ports below 1024. That is separate from the emulator backend connection.
+- `10.0.2.2` = the Windows host machine from the emulator
+- `localhost` = the emulator itself, not the PC
 
-For the Android app, they should target the backend directly at `http://10.0.2.2:8000/` not `http://localhost:8080/` unless they are intentionally hitting nginx from the host browser.
+If the app calls `localhost`, it will fail even when the backend is running correctly.
 
-What they still need to do
+## Recommended local workflow
 
-1. Start Docker Desktop on Windows
+On Windows:
+
+1. Start Docker Desktop
 2. From the project root, run `just docker-up`
+3. Confirm the backend responds at `http://localhost:8000/health/` from the host machine
+4. In Android Studio, run the app on the emulator
+5. Keep the app configured to use `http://10.0.2.2:8000/` as the backend base URL
 
-In Android Studio, run the app on the emulator
+## Real device note
 
-Confirm the backend is healthy at http://localhost:8000/health/` from the host machine.
+If the team uses a real Android device instead of the emulator, replace `10.0.2.2` with the host machine's LAN IP such as `192.168.x.x`, and ensure the Windows firewall allows the port.
 
-If they use a real Android device instead of the emulator, they must replace 10.0.2.2 with their host machine's LAN IP (for example `192.168.x.x`) and ensure the Windows firewall allows the port.
+## Practical takeaway
 
-This is the correct dev setup for their scenario, and I did not find any additional code changes required in the mobile app itself.
+This is the correct dev setup for this repo:
+
+- Windows 11 + Docker Desktop
+- Django backend exposed at `localhost:8000` from the host
+- Android emulator reaching `10.0.2.2:8000`
+- local HTTP allowed in Android for development
+
+This matches the same emulator-safe setup pattern described in the other project, and in this repo the Android configuration is already in place.
