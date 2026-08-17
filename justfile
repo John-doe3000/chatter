@@ -45,6 +45,15 @@ backend-shell:
 	@echo "Opening Django shell..."
 	cd backend && .venv/bin/python manage.py shell
 
+# Mobile Android development
+mobile-lint:
+	@echo "Running Android lint checks..."
+	cd mobile && ../gradlew lint
+
+mobile-test:
+	@echo "Running Android unit tests..."
+	cd mobile && ../gradlew test
+
 clean:
 	@echo "Cleaning up..."
 	cd backend && find . -type f -name "*.pyc" -delete
