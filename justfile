@@ -7,14 +7,6 @@ venv-create:
 	@echo "  Windows: backend\\.venv\\Scripts\\activate"
 	@echo "  Unix/Mac: source backend/.venv/bin/activate"
 
-venv-activate:
-	@echo "Opening a shell with the backend virtual environment activated..."
-	cd backend && if [[ ! -f .venv/bin/activate ]]; then echo "Virtual environment not found. Run: just venv-create"; exit 1; fi; source .venv/bin/activate && exec ${SHELL:-bash} -i
-
-setup: venv-create
-	@echo "Setting up development environment..."
-	@echo "Then run: just install"
-
 install:
 	@echo "Installing dependencies..."
 	cd backend && .venv/bin/python -m pip install -r requirements.txt
@@ -29,10 +21,6 @@ backend-dev:
 	@echo "Starting Django development server..."
 	cd backend && .venv/bin/python manage.py runserver
 
-backend-test:
-	@echo "Running tests with pytest..."
-	cd backend && .venv/bin/python -m pytest
-
 backend-lint:
 	@echo "Running backend lint checks..."
 	cd backend && .venv/bin/python -m ruff check .
@@ -40,6 +28,10 @@ backend-lint:
 backend-lint-fix:
 	@echo "Running backend lint checks..."
 	cd backend && .venv/bin/python -m ruff check . --fix
+
+backend-test:
+	@echo "Running tests with pytest..."
+	cd backend && .venv/bin/python -m pytest
 
 backend-migrations:
 	@echo "Applying database migrations..."
@@ -52,15 +44,6 @@ backend-superuser:
 backend-shell:
 	@echo "Opening Django shell..."
 	cd backend && .venv/bin/python manage.py shell
-
-# Frontend (if applicable)
-frontend-dev:
-	@echo "Starting frontend development server..."
-	npm start
-
-frontend-build:
-	@echo "Building frontend for production..."
-	npm run build
 
 clean:
 	@echo "Cleaning up..."

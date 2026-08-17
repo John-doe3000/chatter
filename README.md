@@ -127,7 +127,7 @@ The `docker-compose.yml` at the repo root spins up gunicorn, daphne, and an ngin
 docker compose up --build
 ```
 
-The API is then reachable at `http://localhost:8000/`.
+The API is then reachable at `http://localhost:8080/` via nginx on the host machine. The internal Django app remains on `http://localhost:8000/` when accessed directly from the Docker network.
 
 ## API Overview
 
